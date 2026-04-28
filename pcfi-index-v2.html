@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCFI 2026 — Pitch & Capital Football Index</title>
+<meta name="description" content="The first public index ranking 30 soccer clubs as financial assets. Built by Pitch & Capital.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#0a0a0a;--white:#f8f6f1;--green:#1D9E75;--green-light:#E1F5EE;--green-dark:#085041;
+  --amber:#BA7517;--amber-light:#FAEEDA;--red:#E24B4A;--red-light:#FCEBEB;
+  --gray:#888780;--gray-light:#f1efe8;--border:rgba(10,10,10,0.1);
+  --serif:'DM Serif Display',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--white);color:var(--black);font-size:16px;line-height:1.6;min-height:100vh}
+
+/* STICKY NAV */
+.sticky-nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(248,246,241,0.95);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+  padding:0 2rem;height:52px;
+  display:flex;align-items:center;justify-content:space-between;
+  transform:translateY(-100%);transition:transform 0.3s ease;
+}
+.sticky-nav.visible{transform:translateY(0)}
+.sticky-nav-brand{font-family:var(--serif);font-size:1.1rem;color:var(--black)}
+.sticky-nav-btn{
+  font-family:var(--sans);font-size:13px;font-weight:500;
+  padding:7px 16px;border-radius:6px;
+  background:var(--green);color:white;border:none;cursor:pointer;
+  text-decoration:none;display:inline-block;transition:opacity 0.15s;
+}
+.sticky-nav-btn:hover{opacity:0.85}
+
+/* HERO */
+.hero{border-bottom:1px solid var(--border);padding:5rem 2rem 3rem;max-width:1100px;margin:0 auto}
+.hero-eyebrow{font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--green);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.hero-eyebrow::before{content:'';display:block;width:24px;height:2px;background:var(--green)}
+.hero-title{font-family:var(--serif);font-size:clamp(2.5rem,6vw,4.5rem);line-height:1.05;letter-spacing:-0.02em;color:var(--black);margin-bottom:1.5rem;max-width:700px}
+.hero-title em{font-style:italic;color:var(--green)}
+.hero-meta{display:flex;flex-wrap:wrap;gap:2rem;align-items:flex-start}
+.hero-desc{font-size:16px;color:var(--gray);max-width:480px;line-height:1.7}
+.hero-stats{display:flex;gap:2rem;flex-wrap:wrap}
+.hero-stat-num{font-family:var(--serif);font-size:2rem;color:var(--black);display:block}
+.hero-stat-label{font-size:12px;color:var(--gray);letter-spacing:0.04em}
+
+/* CONTROVERSIAL */
+.controversial{max-width:1100px;margin:0 auto;padding:2.5rem 2rem;border-bottom:1px solid var(--border)}
+.section-label{font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray);margin-bottom:1.25rem}
+.controversial-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.controversial-card{background:white;border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem}
+.controversial-card-flag{font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:3px 8px;border-radius:20px;display:inline-block;margin-bottom:10px}
+.controversial-card-name{font-family:var(--serif);font-size:1.3rem;margin-bottom:6px}
+.controversial-card-rank{font-size:13px;font-weight:500;color:var(--gray);margin-bottom:8px}
+.controversial-card-text{font-size:13px;color:var(--gray);line-height:1.6}
+
+/* SCATTER */
+.scatter-section{max-width:1100px;margin:0 auto;padding:2.5rem 2rem;border-bottom:1px solid var(--border)}
+.scatter-wrap{position:relative;width:100%;height:420px;margin-top:1rem}
+#scatter-canvas{width:100%;height:100%}
+.scatter-tooltip{
+  position:absolute;background:white;border:1px solid var(--border);border-radius:8px;
+  padding:10px 14px;font-size:13px;pointer-events:none;display:none;
+  box-shadow:0 4px 16px rgba(0,0,0,0.08);min-width:160px;z-index:10;
+}
+.scatter-tooltip-name{font-weight:500;font-size:14px;margin-bottom:4px}
+.scatter-tooltip-scores{color:var(--gray);font-size:12px;line-height:1.8}
+
+/* CONTROLS */
+.controls-wrap{max-width:1100px;margin:0 auto;padding:2rem 2rem 1rem;display:flex;gap:12px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border)}
+.ctrl-input{font-family:var(--sans);font-size:14px;padding:8px 14px;border:1px solid var(--border);border-radius:6px;background:white;color:var(--black);outline:none;transition:border-color 0.15s;width:200px}
+.ctrl-input:focus{border-color:var(--green)}
+.ctrl-select{font-family:var(--sans);font-size:14px;padding:8px 14px;border:1px solid var(--border);border-radius:6px;background:white;color:var(--black);outline:none;cursor:pointer}
+.ctrl-label{font-size:12px;color:var(--gray);letter-spacing:0.04em;margin-right:-4px}
+.results-bar{max-width:1100px;margin:0 auto;padding:0.75rem 2rem;font-size:12px;color:var(--gray);border-bottom:1px solid var(--border)}
+
+/* TABLE */
+.table-wrap{max-width:1100px;margin:0 auto;padding:0 2rem}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--gray);padding:1rem 1rem 0.75rem;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+thead th.r{text-align:right}
+tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s}
+tbody tr:hover{background:rgba(29,158,117,0.04)}
+tbody tr.active{background:rgba(29,158,117,0.07)}
+tbody td{padding:1rem;vertical-align:middle;font-size:14px}
+tbody td.r{text-align:right}
+.rank-num{font-family:var(--serif);font-size:1.1rem;color:var(--gray);min-width:28px;display:inline-block}
+.club-name-main{font-size:15px;font-weight:500;color:var(--black);display:block}
+.league-pill{display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;margin-top:3px;letter-spacing:0.03em}
+.score-cell{font-size:15px;font-weight:500;text-align:right}
+.bar-wrap{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+.bar-track{width:80px;height:5px;border-radius:3px;background:var(--gray-light);overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width 0.3s ease}
+.pcfi-score{font-family:var(--serif);font-size:1.3rem;min-width:36px;text-align:right}
+.grade-pill{font-size:10px;font-weight:500;padding:3px 8px;border-radius:20px;letter-spacing:0.04em;text-transform:uppercase}
+.badge-wc{font-size:9px;font-weight:500;padding:2px 6px;border-radius:20px;background:#FAECE7;color:#712B13;margin-left:5px;letter-spacing:0.03em}
+
+/* DETAIL DRAWER */
+.detail-drawer{display:none;background:white;border:1px solid var(--border);border-radius:12px;margin:0 2rem 1.5rem;max-width:calc(1100px - 4rem);margin-left:auto;margin-right:auto;overflow:hidden;animation:slideDown 0.2s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.detail-drawer.open{display:block}
+.detail-top{padding:1.5rem 1.75rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem}
+.detail-club-name{font-family:var(--serif);font-size:1.75rem;color:var(--black);line-height:1.1}
+.detail-league-tag{font-size:12px;color:var(--gray);margin-top:4px}
+.detail-scores-row{display:flex;gap:2rem;align-items:center;flex-wrap:wrap}
+.detail-score-item{text-align:center}
+.detail-score-big{font-family:var(--serif);font-size:2rem;display:block;line-height:1}
+.detail-score-tiny{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;display:block}
+.detail-body{padding:1.5rem 1.75rem}
+.detail-summary{font-size:15px;line-height:1.75;color:var(--black);margin-bottom:1.25rem;max-width:700px}
+.detail-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
+.detail-card{background:var(--gray-light);border-radius:8px;padding:1rem 1.25rem}
+.detail-card-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray);margin-bottom:6px}
+.detail-card-text{font-size:14px;line-height:1.6;color:var(--black)}
+.detail-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.detail-close{font-family:var(--sans);font-size:12px;padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--gray);cursor:pointer;transition:all 0.15s}
+.detail-close:hover{background:var(--gray-light);color:var(--black)}
+.share-btn{font-family:var(--sans);font-size:12px;padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--black);cursor:pointer;transition:all 0.15s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.share-btn:hover{background:var(--gray-light)}
+.share-icon{width:14px;height:14px;display:inline-block;vertical-align:middle}
+
+/* METHODOLOGY */
+.methodology{max-width:1100px;margin:0 auto;padding:2.5rem 2rem;border-top:1px solid var(--border)}
+.methodology-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:1.25rem}
+.method-card{background:white;border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem}
+.method-card-title{font-family:var(--serif);font-size:1.1rem;margin-bottom:8px}
+.method-card-items{list-style:none;display:flex;flex-direction:column;gap:6px}
+.method-card-items li{font-size:13px;color:var(--gray);padding-left:14px;position:relative;line-height:1.5}
+.method-card-items li::before{content:'—';position:absolute;left:0;color:var(--green)}
+
+/* FOOTER */
+.footer{max-width:1100px;margin:0 auto;padding:1.5rem 2rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.footer-brand{font-family:var(--serif);font-size:1rem;color:var(--black)}
+.footer-sub{font-size:12px;color:var(--gray);margin-top:2px}
+.footer-right{font-size:12px;color:var(--gray);text-align:right;line-height:1.6}
+.footer-link{color:var(--green);text-decoration:none;font-weight:500}
+.no-results{padding:3rem 1rem;text-align:center;color:var(--gray);font-size:14px}
+
+@media(max-width:600px){
+  .detail-cards,.methodology-grid{grid-template-columns:1fr}
+  .hero-title{font-size:2.2rem}
+  .controls-wrap{flex-direction:column;align-items:stretch}
+  .ctrl-input{width:100%}
+  .controversial-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav class="sticky-nav" id="sticky-nav">
+  <div class="sticky-nav-brand">Pitch & Capital</div>
+  <a class="sticky-nav-btn" href="https://pitchandcapital.beehiiv.com" target="_blank">Subscribe to the newsletter</a>
+</nav>
+
+<header class="hero" id="hero">
+  <div class="hero-eyebrow">Pitch & Capital — 2026 Edition</div>
+  <h1 class="hero-title">The Football Club <em>Financial</em> Index</h1>
+  <div class="hero-meta">
+    <p class="hero-desc">30 clubs. Two scores. One composite ranking. The first public index treating soccer clubs as financial assets — not just football teams. Click any club for the full breakdown.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="hero-stat-num">30</span><span class="hero-stat-label">Clubs ranked</span></div>
+      <div class="hero-stat"><span class="hero-stat-num">2</span><span class="hero-stat-label">Score dimensions</span></div>
+      <div class="hero-stat"><span class="hero-stat-num">11</span><span class="hero-stat-label">Leagues covered</span></div>
+    </div>
+  </div>
+</header>
+
+<section class="controversial">
+  <div class="section-label">Most controversial rankings</div>
+  <div class="controversial-grid">
+    <div class="controversial-card">
+      <span class="controversial-card-flag" style="background:#FAECE7;color:#712B13">Highest IA in index</span>
+      <div class="controversial-card-name">Inter Miami — #8</div>
+      <div class="controversial-card-rank">PCFI 80 &nbsp;|&nbsp; Financial Health 68 &nbsp;|&nbsp; Investment Attractiveness 92</div>
+      <div class="controversial-card-text">The highest Investment Attractiveness score of any club in the index — built almost entirely around a 38-year-old. When Messi retires, that 92 becomes a very different number.</div>
+    </div>
+    <div class="controversial-card">
+      <span class="controversial-card-flag" style="background:#FCEBEB;color:#791F1F">Most valuable brand, 27th overall</span>
+      <div class="controversial-card-name">Manchester United — #27</div>
+      <div class="controversial-card-rank">PCFI 58 &nbsp;|&nbsp; Financial Health 55 &nbsp;|&nbsp; Investment Attractiveness 60</div>
+      <div class="controversial-card-text">The world's most recognizable football brand sits 27th in this index. £1.29 billion in debt, two Champions League absences in three years, and a rebuild with no clear end date.</div>
+    </div>
+    <div class="controversial-card">
+      <span class="controversial-card-flag" style="background:#FAEEDA;color:#633806">Trophy winners, debt-laden books</span>
+      <div class="controversial-card-name">Barcelona — #22</div>
+      <div class="controversial-card-rank">PCFI 69 &nbsp;|&nbsp; Financial Health 60 &nbsp;|&nbsp; Investment Attractiveness 78</div>
+      <div class="controversial-card-text">Winning trophies again but sitting 22nd. €1.96 billion in debt, €159 million in unpaid transfer fees, and the Negreira case formally charged in October 2025. The trophies are real. The books are not healed.</div>
+    </div>
+  </div>
+</section>
+
+<section class="scatter-section">
+  <div class="section-label">Financial health vs investment attractiveness</div>
+  <div class="scatter-wrap">
+    <canvas id="scatter-canvas" role="img" aria-label="Scatter plot of 30 clubs by Financial Health and Investment Attractiveness scores"></canvas>
+    <div class="scatter-tooltip" id="scatter-tooltip">
+      <div class="scatter-tooltip-name" id="tt-name"></div>
+      <div class="scatter-tooltip-scores" id="tt-scores"></div>
+    </div>
+  </div>
+</section>
+
+<div class="controls-wrap">
+  <span class="ctrl-label">Filter</span>
+  <input class="ctrl-input" type="text" id="search" placeholder="Search clubs or leagues..." oninput="render()">
+  <select class="ctrl-select" id="league-filter" onchange="render()">
+    <option value="">All leagues</option>
+    <option value="Premier League">Premier League</option>
+    <option value="La Liga">La Liga</option>
+    <option value="Bundesliga">Bundesliga</option>
+    <option value="Serie A">Serie A</option>
+    <option value="Ligue 1">Ligue 1</option>
+    <option value="Eredivisie">Eredivisie</option>
+    <option value="Primeira Liga">Primeira Liga</option>
+    <option value="Belgian Pro League">Belgian Pro League</option>
+    <option value="MLS">MLS</option>
+    <option value="Brasileirão">Brasileirão</option>
+    <option value="Liga Profesional">Liga Profesional</option>
+  </select>
+  <span class="ctrl-label">Sort</span>
+  <select class="ctrl-select" id="sort-by" onchange="render()">
+    <option value="pcfi">PCFI score</option>
+    <option value="fh">Financial health</option>
+    <option value="ia">Investment attractiveness</option>
+    <option value="name">Club name</option>
+  </select>
+</div>
+
+<div class="results-bar" id="results-bar"></div>
+
+<div class="detail-drawer" id="detail-drawer">
+  <div class="detail-top">
+    <div>
+      <div class="detail-club-name" id="d-name"></div>
+      <div class="detail-league-tag" id="d-league"></div>
+    </div>
+    <div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;">
+      <div class="detail-scores-row" id="d-scores"></div>
+    </div>
+  </div>
+  <div class="detail-body">
+    <p class="detail-summary" id="d-summary"></p>
+    <div class="detail-cards">
+      <div class="detail-card"><div class="detail-card-label">Key risk</div><div class="detail-card-text" id="d-risk"></div></div>
+      <div class="detail-card"><div class="detail-card-label">Key opportunity</div><div class="detail-card-text" id="d-opp"></div></div>
+    </div>
+    <div class="detail-actions">
+      <button class="detail-close" onclick="closeDetail()">Close</button>
+      <a class="share-btn" id="share-x-btn" href="#" target="_blank">
+        <svg class="share-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        Share on X
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:40px;">#</th>
+        <th>Club</th>
+        <th class="r">Financial health</th>
+        <th class="r">Investment attractiveness</th>
+        <th class="r">PCFI score</th>
+        <th class="r">Grade</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="no-results" id="no-results" style="display:none;">No clubs match your search.</div>
+</div>
+
+<section class="methodology">
+  <div class="section-label">How the scores work</div>
+  <div class="methodology-grid">
+    <div class="method-card">
+      <div class="method-card-title">Financial Health (FH)</div>
+      <ul class="method-card-items">
+        <li>Revenue size and growth trajectory</li>
+        <li>Wage-to-revenue ratio</li>
+        <li>Transfer market profitability over 3 years</li>
+        <li>Debt levels relative to revenue</li>
+        <li>Commercial revenue diversity — matchday, broadcast, sponsorship</li>
+        <li>Ownership financial strength and commitment</li>
+      </ul>
+    </div>
+    <div class="method-card">
+      <div class="method-card-title">Investment Attractiveness (IA)</div>
+      <ul class="method-card-items">
+        <li>Managerial stability and coaching quality</li>
+        <li>Squad age profile and future sell-on value</li>
+        <li>Stadium situation and infrastructure upside</li>
+        <li>League and market growth trajectory</li>
+        <li>Brand strength in underpenetrated markets</li>
+        <li>World Cup 2026 exposure for North American clubs</li>
+      </ul>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--gray);margin-top:1.25rem;line-height:1.6;">Scores are generated using publicly available financial data — Deloitte Football Money League 2026, club annual accounts, and UEFA Financial Sustainability reports — and AI analysis by Anthropic / Claude. This index is a framework for discussion, not financial advice.</p>
+</section>
+
+<footer class="footer">
+  <div>
+    <div class="footer-brand">Pitch & Capital</div>
+    <div class="footer-sub">Soccer through a finance and investment lens</div>
+  </div>
+  <div class="footer-right">
+    Data: Deloitte Football Money League 2026, club accounts, UEFA reports<br>
+    Analysis: Anthropic / Claude &nbsp;|&nbsp; <a class="footer-link" href="https://pitchandcapital.beehiiv.com" target="_blank">Subscribe to the newsletter</a>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const clubs=[
+  {name:"Real Madrid",league:"La Liga",fh:92,ia:90,pcfi:91,summary:"The most financially complete club on the planet. Real Madrid combine over €1 billion in annual revenue with member-based ownership that means no shareholder cash drain, near-zero operating debt, and a freshly renovated Bernabeu just starting to unlock its full commercial potential. There is no club in world football with a better combination of scale, stability, and financial discipline.",risk:"Aging squad core and dependency on Vinicius Jr. commercial profile. Any succession failure at the top could dent both on-pitch results and brand value.",opp:"The Bernabeu renovation unlocks massive new events revenue from concerts, corporate hospitality, and sponsorship tiers that didn't exist before. This is a multi-year commercial tailwind."},
+  {name:"Arsenal",league:"Premier League",fh:84,ia:87,pcfi:86,summary:"Arsenal have quietly become one of the best-run clubs in England. A young, hungry squad built around smart signings rather than panic spending, a modern stadium, and an owner in Stan Kroenke who is deeply committed. They haven't won the title yet, but the financial foundations are stronger than their trophy cabinet currently reflects.",risk:"The gap between squad quality and title-winning standard still requires significant investment. One bad transfer window could set the project back two years.",opp:"Champions League football returning consistently unlocks serious commercial revenue. Arsenal's global brand is under-monetized relative to their historical standing — that gap is closing fast."},
+  {name:"Bayern Munich",league:"Bundesliga",fh:90,ia:82,pcfi:86,summary:"Bayern are the model of a self-sustaining football club. Consistent Champions League revenue, a domestic league they have dominated for over a decade, and a member-owned structure that keeps financial discipline baked in.",risk:"Domestic dominance is taken for granted but Bayer Leverkusen's title last season proved it can slip. Any sustained period without Bundesliga or Champions League success would impact revenue materially.",opp:"Global expansion into North American and Asian markets remains underdeveloped relative to Premier League clubs. The upcoming World Cup is a genuine awareness driver."},
+  {name:"Liverpool",league:"Premier League",fh:86,ia:84,pcfi:85,summary:"Liverpool remain one of the most commercially powerful clubs in the world with a genuinely global fanbase and smart ownership in Fenway Sports Group. A new stadium expansion is underway, squad transition is being managed intelligently, and the brand is as strong as it has ever been.",risk:"The post-Klopp transition is still unproven. Arne Slot has started well but sustaining Liverpool's intensity over multiple seasons carries real risk.",opp:"Anfield expansion adds significant matchday revenue and a new corporate hospitality tier. If Slot's project delivers trophies, the commercial flywheel accelerates sharply."},
+  {name:"Borussia Dortmund",league:"Bundesliga",fh:81,ia:84,pcfi:83,summary:"Dortmund punch well above their financial weight. Their scouting model consistently produces world-class players from relatively modest investments, and their Champions League final appearance last season reminded the world of their brand power.",risk:"The business model depends entirely on selling players before they peak. When that pipeline dries up or a key player leaves at the wrong time, the financial model becomes exposed.",opp:"Consistent Champions League qualification combined with their fan culture and stadium experience makes them one of the most marketable clubs globally for sponsorship deals they haven't yet landed."},
+  {name:"Flamengo",league:"Brasileirão",fh:78,ia:86,pcfi:82,wc:true,summary:"Flamengo are the most powerful club in South America by almost every measure — fanbase, revenue, brand, and trophy count. They are the pipeline source for some of the world's most valuable transfer assets.",risk:"Brazilian football governance and financial regulation remain volatile. Currency risk and infrastructure challenges are real constraints on what Flamengo can build.",opp:"The World Cup in North America brings enormous attention to Brazilian football. Flamengo's global brand is still massively undermonetized relative to what a club of this size should be generating commercially."},
+  {name:"Bayer Leverkusen",league:"Bundesliga",fh:80,ia:81,pcfi:81,summary:"Leverkusen won the Bundesliga unbeaten last season under Xabi Alonso — arguably the most impressive domestic title in recent European history. The pharmaceutical giant Bayer as a backer provides financial stability that most clubs only dream of.",risk:"Xabi Alonso is one of the most coveted managers in the world. Losing him would be a significant setback, and the squad was partly built around his specific system.",opp:"If Leverkusen can sustain Champions League qualification for three or more consecutive seasons, their commercial revenue and global brand recognition will re-rate significantly."},
+  {name:"Inter Miami",league:"MLS",fh:68,ia:92,pcfi:80,wc:true,summary:"Inter Miami have the highest Investment Attractiveness score of any club in the index, and the most precarious Financial Health. They are almost entirely defined by one 38-year-old player. When Messi retires, that 92 becomes a serious question.",risk:"Complete dependency on Messi. The club has not built a post-Messi identity, playing style, or commercial structure that stands independently. This is the single biggest risk in the index.",opp:"The World Cup is played partially in Miami's market. If Messi plays and Argentina go deep, the commercial and cultural impact on Inter Miami's brand could be generational."},
+  {name:"Paris Saint-Germain",league:"Ligue 1",fh:78,ia:80,pcfi:79,summary:"PSG have the financial backing of the Qatar Investment Authority, which means financial distress is essentially impossible. But three decades of Qatari-funded dominance haven't produced a Champions League trophy, and the departure of Mbappe has forced a genuine rebuild.",risk:"Over-reliance on QIA funding creates a club culture where sporting merit and financial discipline are secondary to ownership ambition.",opp:"The post-Mbappe rebuild, if managed well, could produce the first truly collective PSG team in modern history. The infrastructure and funding are there."},
+  {name:"Manchester City",league:"Premier League",fh:78,ia:76,pcfi:77,summary:"Manchester City are the dominant force in English football and their financial position is strong on most metrics. However, 115 charges of alleged financial rule breaches still hang over the club, and the outcome represents a genuine tail risk that no other top club faces.",risk:"The 115 charges case is an existential risk if findings go against the club. Any significant points deduction or other sanction would reshape English football.",opp:"City Football Group's global multi-club ownership model is the most sophisticated in football. The network of clubs across multiple continents creates a talent pipeline with no clear comparable."},
+  {name:"Tottenham",league:"Premier League",fh:76,ia:78,pcfi:77,summary:"Tottenham have the best stadium in English football and a commercial operation that genuinely competes with the traditional Big Six. The challenge is that the on-pitch product hasn't matched the infrastructure investment.",risk:"A second consecutive season outside the Champions League would materially impact their ability to attract and retain top talent.",opp:"The Tottenham Hotspur Stadium is a revenue machine that still has untapped potential. NFL games, concerts, and events generate income that most clubs simply cannot access."},
+  {name:"Benfica",league:"Primeira Liga",fh:73,ia:80,pcfi:77,summary:"Benfica are one of the best-run clubs in European football when measured by what they do with their resources. Their player trading operation consistently turns modest investments into massive profits.",risk:"The model depends entirely on producing or acquiring the next elite player before the market notices. One or two transfer misses in a row would significantly impact their financial position.",opp:"Portuguese football is increasingly recognized as one of the world's best development environments. Benfica's pipeline into the Champions League and Premier League is as reliable as any in the game."},
+  {name:"Brighton",league:"Premier League",fh:72,ia:80,pcfi:76,summary:"Brighton are quietly one of the most admirable clubs in English football. Owner Tony Bloom has built a scouting and development model that consistently beats the market. Caicedo bought for £4.5 million, sold for £115 million. That's not luck — that's a system.",risk:"Their model depends on finding the next undervalued asset before rivals do. As their reputation grows, the market is getting wise to their methods.",opp:"A new stadium will eventually become necessary and the planning process is underway. When that happens, matchday revenue will increase significantly."},
+  {name:"LA Galaxy",league:"MLS",fh:70,ia:82,pcfi:76,wc:true,summary:"The most historic brand in American soccer with five MLS Cup titles and a commercial infrastructure built on decades of presence in the world's second-largest media market.",risk:"MLS still lacks the broadcast deal and global profile that would make it a premium product. Until that changes, the gap between Galaxy's brand potential and commercial reality persists.",opp:"Los Angeles is a World Cup host city in 2026. The attention brought to American soccer during the tournament could be the inflection point that finally moves the needle on MLS broadcast value."},
+  {name:"AC Milan",league:"Serie A",fh:76,ia:73,pcfi:75,summary:"AC Milan have been transformed by RedBird Capital's ownership. A new stadium deal is done, commercial revenue is growing, and the squad is genuinely competing for Serie A titles again.",risk:"The new stadium development still carries execution risk, and the San Siro exit is politically complicated. Any delays could slow the commercial turnaround.",opp:"Milan's global brand — particularly in Asia — is massively undermonetized relative to their historical stature. A return to consistent Champions League football would accelerate this."},
+  {name:"Inter Milan",league:"Serie A",fh:70,ia:76,pcfi:73,summary:"Inter have built a genuinely competitive squad that won the Serie A title recently and reached a Champions League final. Oaktree Capital's ownership brings financial discipline that was missing under the Zhang era.",risk:"Oaktree are a financial investor, not a football operator. Their primary interest is return on capital, which means the club could be sold again within a few years.",opp:"The combined new stadium with AC Milan will be one of the best in Europe when built. The infrastructure upgrade combined with competitive football could significantly re-rate Inter's commercial value."},
+  {name:"Seattle Sounders",league:"MLS",fh:67,ia:78,pcfi:73,wc:true,summary:"The Sounders are the model MLS franchise — consistent winners, fanatical support, smart ownership, and a genuine community connection that most American sports teams spend decades trying to manufacture.",risk:"MLS's overall commercial ceiling remains the binding constraint. The Sounders execute as well as any club in the league, but the league's limitations cap their upside.",opp:"Seattle's ownership group has deep pockets and genuine ambition. If MLS eventually unlocks a renegotiated broadcast deal, the Sounders would be one of the biggest beneficiaries."},
+  {name:"Brentford",league:"Premier League",fh:68,ia:75,pcfi:72,summary:"Brentford are one of the great stories of modern English football. A data-driven ownership model, a newly built stadium, and a squad assembled through analytical rigor rather than big fees.",risk:"Their model relies on staying in the Premier League. Relegation would be a serious financial setback and the squad would likely need to be significantly reduced in wages.",opp:"The Brentford Community Stadium is still relatively new and commercial revenues are growing. Sustained Premier League stability would allow sponsorship and matchday revenues to compound over time."},
+  {name:"PSV Eindhoven",league:"Eredivisie",fh:70,ia:73,pcfi:72,summary:"PSV are the best-run club in Dutch football and one of the most reliable talent pipelines in European football. Their connection to the Philips corporation provides historical stability.",risk:"Dutch football's structural revenue disadvantage relative to the Big Five leagues means PSV will always lose their best players to richer competitors, capping their sporting ceiling.",opp:"The Eredivisie's reputation as a development league is actually an asset in the current transfer market. PSV's ability to source and develop players at lower cost than Premier League clubs is a sustainable competitive advantage."},
+  {name:"Atletico Madrid",league:"La Liga",fh:67,ia:75,pcfi:71,summary:"Atletico are one of the most fascinating clubs in European football — tactically elite, emotionally intense, and punching above their financial weight for over a decade under Diego Simeone.",risk:"Simeone has been there for over a decade but the club's identity is so tied to him that any transition will be genuinely difficult.",opp:"Atletico's American fanbase and global profile are growing, and their Champions League pedigree gives them access to commercial conversations that smaller Spanish clubs cannot have."},
+  {name:"Bologna",league:"Serie A",fh:65,ia:76,pcfi:71,summary:"Bologna are the most interesting emerging story in Italian football. The club qualified for the Champions League for the first time in decades, and their model of developing young talent and playing attractive football is starting to attract serious attention.",risk:"Champions League football for the first time brings significant squad and financial pressure. Managing that step-up while maintaining the model that got them there is genuinely difficult.",opp:"Bologna sit at the intersection of everything the modern transfer market values: young talent, an attractive playing style, and a smart ownership group. Their sell-on potential for current squad members is significant."},
+  {name:"Barcelona",league:"La Liga",fh:60,ia:78,pcfi:69,summary:"Barcelona's recovery is real — they are winning trophies again and the squad is genuinely talented. But the balance sheet still carries €1.96 billion of debt, there are €159 million of unpaid transfer fees on the books, and the Negreira corruption case was formally charged in October 2025.",risk:"The debt and legal situation create a structural vulnerability that could constrain investment at exactly the wrong moment.",opp:"If Barcelona can sustain their on-pitch form while gradually reducing debt, the commercial flywheel of their global brand — still one of the two or three most recognized in world sport — would accelerate their recovery."},
+  {name:"Club Brugge",league:"Belgian Pro League",fh:65,ia:73,pcfi:69,summary:"Club Brugge are the most consistently excellent club in Belgian football and one of the best-managed smaller clubs in Europe. Their Champions League appearances have raised their profile and their transfer model is well established.",risk:"Belgian football's structural limitations mean the best players will always leave, and the club's revenue ceiling is set by the league rather than their own performance.",opp:"The Belgian Pro League is one of the most underrated development environments in Europe. Brugge's network and scouting infrastructure gives them access to talent before the bigger clubs notice."},
+  {name:"Chelsea",league:"Premier League",fh:64,ia:70,pcfi:67,summary:"Chelsea have spent £4.25 billion under BlueCo and posted £1.675 billion in total losses since 2022. Five managers in four years, three of whom are now taking national teams to the World Cup. The FA Cup final against City is a genuine moment of hope, but the fundamental questions about this project remain unanswered.",risk:"The model is structurally loss-making and the debt structure at holding company level is compounding. Without a long-term shirt sponsor, managerial stability, and better player trading returns, the losses continue.",opp:"The underlying squad has genuine talent and the BlueCo financial commitment means the club isn't going anywhere. A single excellent managerial appointment this summer could change the trajectory materially."},
+  {name:"Ajax",league:"Eredivisie",fh:64,ia:70,pcfi:67,summary:"Ajax are going through the most difficult period in a generation. The collapse from Champions League semi-finalists to mid-table Eredivisie has been painful and expensive.",risk:"The rebuild is still in early stages and there is no guarantee the next generation of talent will match the golden generation that preceded them. Expectations are enormous and patience is finite.",opp:"Ajax's academy remains one of the best in the world. When the pipeline produces the next elite generation, the club's trajectory will shift dramatically. The infrastructure to be elite again is still there."},
+  {name:"FC Porto",league:"Primeira Liga",fh:60,ia:73,pcfi:67,summary:"Porto are one of the great selling clubs in world football with a proven model of sourcing talent cheaply and selling expensively. Their Champions League pedigree gives them credibility and access that other Portuguese clubs can't match.",risk:"Porto carry more debt than their Portuguese rivals and their commercial revenue is more limited. Any sustained failure to qualify for the Champions League knockout rounds would have a meaningful financial impact.",opp:"Porto's scouting network in South America and Africa is exceptional. If they can continue to find and develop the next generation of elite talent, the transfer profits will sustain the model."},
+  {name:"Manchester United",league:"Premier League",fh:55,ia:60,pcfi:58,summary:"Manchester United have the world's most valuable football brand and one of the most stressed balance sheets in the Premier League. Total debt has risen to a record £1.29 billion under INEOS even as costs are being cut. They have missed the Champions League twice in three years.",risk:"£1.29 billion of debt at a club that has missed the Champions League twice in three years is a serious structural problem. INEOS's cost-cutting approach may not be sufficient to close the gap to rivals quickly enough.",opp:"INEOS's ownership brings genuine sporting expertise and long-term patience. If the rebuild produces Champions League football consistently, the commercial flywheel of the United brand is among the most powerful in sport."},
+  {name:"River Plate",league:"Liga Profesional",fh:50,ia:65,pcfi:58,wc:true,summary:"River Plate are one of the great institutions of South American football with a history and fanbase that rivals any club in the world. But Argentine football's economic challenges create a structural ceiling on what River can build financially.",risk:"Argentine macroeconomic instability is the dominant risk. Inflation, currency devaluation, and political volatility can change the financial picture dramatically in a short period.",opp:"River's brand in the context of a World Cup co-hosted partly by Argentina's neighbors is significant. Any Argentine deep run in the tournament brings enormous attention to the River players involved."},
+  {name:"Marseille",league:"Ligue 1",fh:50,ia:60,pcfi:55,summary:"Marseille have one of the most passionate fanbases in European football and a city that genuinely lives for the club. But the financial picture under Frank McCourt's ownership has been difficult — significant losses, limited investment, and the sense that the owner may be looking for an exit.",risk:"Ownership uncertainty is the dominant concern. If McCourt sells to the wrong buyer, the club could face years of further instability.",opp:"A well-capitalized new owner would inherit one of the most emotionally powerful clubs in Europe with a ready-made fanbase and genuine Champions League history."},
+  {name:"Juventus",league:"Serie A",fh:50,ia:60,pcfi:55,summary:"Juventus have posted eight consecutive years of losses and the Exor family ownership is showing signs of fatigue. The stadium is excellent, the brand is strong globally, and the squad still attracts top talent — but the financial model is broken in a way that trophies alone won't fix.",risk:"Eight years of consecutive losses is not a cyclical problem, it's a structural one. Without either significant revenue growth or a fundamental reset of the wage and transfer model, the losses continue.",opp:"Juventus's brand in North America and Asia is undermonetized. A return to consistent Champions League knockout-round football would unlock commercial conversations that the current instability has closed off."}
+];
+
+const leagueColors={
+  "Premier League":{bg:"#E6F1FB",text:"#0C447C"},
+  "La Liga":{bg:"#FAECE7",text:"#712B13"},
+  "Bundesliga":{bg:"#FAEEDA",text:"#633806"},
+  "Serie A":{bg:"#E1F5EE",text:"#085041"},
+  "Ligue 1":{bg:"#EEEDFE",text:"#3C3489"},
+  "Eredivisie":{bg:"#FCEBEB",text:"#791F1F"},
+  "Primeira Liga":{bg:"#EAF3DE",text:"#27500A"},
+  "Belgian Pro League":{bg:"#FBEAF0",text:"#72243E"},
+  "MLS":{bg:"#dce8fa",text:"#185FA5"},
+  "Brasileirão":{bg:"#EAF3DE",text:"#3B6D11"},
+  "Liga Profesional":{bg:"#FAEEDA",text:"#854F0B"}
+};
+
+function grade(s){
+  if(s>=85)return{label:"Elite",bg:"#E1F5EE",text:"#085041"};
+  if(s>=75)return{label:"Strong",bg:"#EAF3DE",text:"#27500A"};
+  if(s>=65)return{label:"Solid",bg:"#FAEEDA",text:"#633806"};
+  if(s>=55)return{label:"Mixed",bg:"#FAECE7",text:"#712B13"};
+  return{label:"Weak",bg:"#FCEBEB",text:"#791F1F"};
+}
+
+function barColor(s){
+  if(s>=85)return"#1D9E75";
+  if(s>=75)return"#639922";
+  if(s>=65)return"#BA7517";
+  if(s>=55)return"#D85A30";
+  return"#E24B4A";
+}
+
+let activeClub=null;
+
+function closeDetail(){
+  document.getElementById('detail-drawer').classList.remove('open');
+  document.querySelectorAll('tbody tr.active').forEach(r=>r.classList.remove('active'));
+  activeClub=null;
+}
+
+function openDetail(club,tr){
+  if(activeClub===club.name){closeDetail();return;}
+  activeClub=club.name;
+  document.querySelectorAll('tbody tr.active').forEach(r=>r.classList.remove('active'));
+  tr.classList.add('active');
+  document.getElementById('d-name').textContent=club.name;
+  document.getElementById('d-league').textContent=club.league;
+  const g=grade(club.pcfi);
+  document.getElementById('d-scores').innerHTML=`
+    <div class="detail-score-item"><span class="detail-score-big">${club.fh}</span><span class="detail-score-tiny">Financial health</span></div>
+    <div class="detail-score-item"><span class="detail-score-big">${club.ia}</span><span class="detail-score-tiny">Investment attractiveness</span></div>
+    <div class="detail-score-item"><span class="detail-score-big" style="color:${barColor(club.pcfi)}">${club.pcfi}</span><span class="detail-score-tiny">PCFI score</span></div>
+    <span class="grade-pill" style="background:${g.bg};color:${g.text}">${g.label}</span>
+  `;
+  document.getElementById('d-summary').textContent=club.summary;
+  document.getElementById('d-risk').textContent=club.risk;
+  document.getElementById('d-opp').textContent=club.opp;
+  const tweetText=encodeURIComponent(`${club.name} scores ${club.pcfi}/100 on the Pitch & Capital Football Index 2026 (FH: ${club.fh} | IA: ${club.ia}). Check the full ranking:`);
+  const tweetUrl=encodeURIComponent(window.location.href);
+  document.getElementById('share-x-btn').href=`https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`;
+  const drawer=document.getElementById('detail-drawer');
+  drawer.classList.add('open');
+  tr.parentNode.parentNode.parentNode.insertBefore(drawer,tr.parentNode.nextSibling);
+  drawer.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function render(){
+  const search=document.getElementById('search').value.toLowerCase();
+  const league=document.getElementById('league-filter').value;
+  const sortBy=document.getElementById('sort-by').value;
+  let filtered=clubs.filter(c=>{
+    const ms=c.name.toLowerCase().includes(search)||c.league.toLowerCase().includes(search);
+    const ml=!league||c.league===league;
+    return ms&&ml;
+  });
+  filtered.sort((a,b)=>{
+    if(sortBy==='fh')return b.fh-a.fh;
+    if(sortBy==='ia')return b.ia-a.ia;
+    if(sortBy==='name')return a.name.localeCompare(b.name);
+    return b.pcfi-a.pcfi;
+  });
+  document.getElementById('results-bar').textContent=`Showing ${filtered.length} of 30 clubs`;
+  document.getElementById('no-results').style.display=filtered.length?'none':'block';
+  const globalRanks=[...clubs].sort((a,b)=>b.pcfi-a.pcfi);
+  const tbody=document.getElementById('tbody');
+  tbody.innerHTML='';
+  filtered.forEach(club=>{
+    const rank=globalRanks.findIndex(c=>c.name===club.name)+1;
+    const lc=leagueColors[club.league]||{bg:'#f1efe8',text:'#5F5E5A'};
+    const g=grade(club.pcfi);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><span class="rank-num">${rank}</span></td>
+      <td>
+        <span class="club-name-main">${club.name}${club.wc?'<span class="badge-wc">WC26</span>':''}</span>
+        <span class="league-pill" style="background:${lc.bg};color:${lc.text}">${club.league}</span>
+      </td>
+      <td class="r score-cell">${club.fh}</td>
+      <td class="r score-cell">${club.ia}</td>
+      <td class="r">
+        <div class="bar-wrap">
+          <div class="bar-track"><div class="bar-fill" style="width:${club.pcfi}%;background:${barColor(club.pcfi)}"></div></div>
+          <span class="pcfi-score" style="color:${barColor(club.pcfi)}">${club.pcfi}</span>
+        </div>
+      </td>
+      <td class="r"><span class="grade-pill" style="background:${g.bg};color:${g.text}">${g.label}</span></td>
+    `;
+    tr.addEventListener('click',()=>openDetail(club,tr));
+    tbody.appendChild(tr);
+  });
+}
+
+render();
+
+// STICKY NAV
+window.addEventListener('scroll',()=>{
+  const hero=document.getElementById('hero');
+  const nav=document.getElementById('sticky-nav');
+  if(window.scrollY>hero.offsetHeight){nav.classList.add('visible');}
+  else{nav.classList.remove('visible');}
+});
+
+// SCATTER PLOT
+window.addEventListener('load',()=>{
+  const canvas=document.getElementById('scatter-canvas');
+  const tooltip=document.getElementById('scatter-tooltip');
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const wrap=canvas.parentElement;
+  canvas.width=wrap.offsetWidth*dpr;
+  canvas.height=wrap.offsetHeight*dpr;
+  canvas.style.width=wrap.offsetWidth+'px';
+  canvas.style.height=wrap.offsetHeight+'px';
+  ctx.scale(dpr,dpr);
+  const W=wrap.offsetWidth;
+  const H=wrap.offsetHeight;
+  const pad={l:48,r:24,t:24,b:48};
+  const chartW=W-pad.l-pad.r;
+  const chartH=H-pad.t-pad.b;
+
+  function toX(fh){return pad.l+(fh-40)/(100-40)*chartW;}
+  function toY(ia){return pad.t+(100-ia)/(100-40)*chartH;}
+
+  function drawGrid(){
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(10,10,10,0.06)';
+    ctx.lineWidth=1;
+    [50,60,70,80,90,100].forEach(v=>{
+      const x=toX(v);
+      ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+chartH);ctx.stroke();
+      ctx.fillStyle='#888780';ctx.font='11px DM Sans,system-ui,sans-serif';
+      ctx.textAlign='center';ctx.fillText(v,x,pad.t+chartH+16);
+    });
+    [50,60,70,80,90,100].forEach(v=>{
+      const y=toY(v);
+      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+chartW,y);ctx.stroke();
+      ctx.textAlign='right';ctx.fillText(v,pad.l-6,y+4);
+    });
+    ctx.fillStyle='#888780';ctx.font='11px DM Sans,system-ui,sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('Financial health →',pad.l+chartW/2,H-4);
+    ctx.save();ctx.translate(12,pad.t+chartH/2);ctx.rotate(-Math.PI/2);
+    ctx.fillText('Investment attractiveness →',0,0);ctx.restore();
+  }
+
+  function drawDots(){
+    clubs.forEach(club=>{
+      const x=toX(club.fh);
+      const y=toY(club.ia);
+      const g=grade(club.pcfi);
+      ctx.beginPath();
+      ctx.arc(x,y,7,0,Math.PI*2);
+      ctx.fillStyle=barColor(club.pcfi);
+      ctx.fill();
+      ctx.strokeStyle='rgba(248,246,241,0.9)';
+      ctx.lineWidth=2;
+      ctx.stroke();
+    });
+  }
+
+  drawGrid();
+  drawDots();
+
+  canvas.addEventListener('mousemove',e=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left;
+    const my=e.clientY-rect.top;
+    let found=null;
+    clubs.forEach(club=>{
+      const x=toX(club.fh);
+      const y=toY(club.ia);
+      if(Math.hypot(mx-x,my-y)<12)found=club;
+    });
+    if(found){
+      canvas.style.cursor='pointer';
+      tooltip.style.display='block';
+      let left=e.clientX-rect.left+16;
+      let top=e.clientY-rect.top-40;
+      if(left+180>W)left=e.clientX-rect.left-180;
+      tooltip.style.left=left+'px';
+      tooltip.style.top=top+'px';
+      document.getElementById('tt-name').textContent=found.name;
+      document.getElementById('tt-scores').innerHTML=`Financial health: ${found.fh}<br>Investment attractiveness: ${found.ia}<br>PCFI score: ${found.pcfi}`;
+    } else {
+      canvas.style.cursor='default';
+      tooltip.style.display='none';
+    }
+  });
+
+  canvas.addEventListener('mouseleave',()=>{tooltip.style.display='none';});
+});
+</script>
+</body>
+</html>
